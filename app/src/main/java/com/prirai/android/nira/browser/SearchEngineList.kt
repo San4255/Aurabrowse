@@ -29,7 +29,7 @@ class SearchEngineList(private val context: Context) {
                 name = "Google",
                 icon = getIconBitmap(com.prirai.android.nira.R.drawable.google),
                 type = SearchEngine.Type.BUNDLED,
-                resultUrls = listOf("https://www.google.com/?q={searchTerms}"),
+                resultUrls = listOf("https://www.google.com/search?q={searchTerms}"),
                 suggestUrl = "https://suggestqueries.google.com/complete/search?output=firefox&q={searchTerms}"
             ),
             SearchEngine(
