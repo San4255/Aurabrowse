@@ -19,9 +19,7 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.ktx.util.URLStringUtils.toDisplayUrl
-import mozilla.components.ui.widgets.behavior.EngineViewScrollingGesturesBehavior
 import java.lang.ref.WeakReference
-import mozilla.components.ui.widgets.behavior.DependencyGravity as MozacToolbarPosition
 import androidx.core.net.toUri
 
 interface BrowserToolbarViewInteractor {
@@ -39,8 +37,7 @@ class BrowserToolbarView(
     private val toolbarPosition: ToolbarPosition,
     private val interactor: BrowserToolbarViewInteractor,
     private val customTabSession: CustomTabSessionState?,
-    private val lifecycleOwner: LifecycleOwner,
-    private val engineView: mozilla.components.concept.engine.EngineView? = null
+    private val lifecycleOwner: LifecycleOwner
 ) {
 
     private val settings = UserPreferences(container.context)
@@ -76,17 +73,7 @@ class BrowserToolbarView(
     internal var view: BrowserToolbar = layout
         .findViewById(R.id.toolbar)
 
-    // Get the actual container for bottom toolbar
-    private val toolbarContainer: View? = if (toolbarLayout == R.layout.component_bottom_browser_toolbar) {
-        val container = layout.findViewById<View>(R.id.toolbarContainer)
-        container ?: layout
-    } else null
-
     val toolbarIntegration: ToolbarIntegration
-
-    @VisibleForTesting
-    internal val isPwaTabOrTwaTab: Boolean
-        get() = false
 
     init {
         view.display.setOnUrlLongClickListener {
@@ -103,8 +90,6 @@ class BrowserToolbarView(
             val isPinningSupported = components.webAppUseCases.isPinningSupported()
 
             view.apply {
-                setToolbarBehavior()
-
                 // Remove elevation to prevent shadow bleeding onto contextual toolbar
                 elevation = 0f
                 outlineProvider = null
@@ -182,114 +167,6 @@ class BrowserToolbarView(
                     engine = components.engine
                 )
         }
-    }
-
-    fun expand() {
-        // expand only for normal tabs and custom tabs not for PWA or TWA
-        if (isPwaTabOrTwaTab) {
-            return
-        }
-
-        val targetView = if (toolbarLayout == R.layout.component_bottom_browser_toolbar) {
-            toolbarContainer ?: layout
-        } else {
-            view
-        }
-        
-        (targetView.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingGesturesBehavior)?.forceExpand()
-        }
-    }
-
-    fun collapse() {
-        // collapse only for normal tabs and custom tabs not for PWA or TWA. Mirror expand()
-        if (isPwaTabOrTwaTab) {
-            return
-        }
-
-        val targetView = if (toolbarLayout == R.layout.component_bottom_browser_toolbar) {
-            toolbarContainer ?: layout
-        } else {
-            view
-        }
-        
-        (targetView.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingGesturesBehavior)?.forceCollapse()
-        }
-    }
-
-    /**
-     * Sets whether the toolbar will have a dynamic behavior (to be scrolled) or not.
-     *
-     * This will intrinsically check and disable the dynamic behavior if
-     *  - this is disabled in app settings
-     *  - toolbar is placed at the bottom and tab shows a PWA or TWA
-     *
-     *  Also if the user has not explicitly set a toolbar position and has a screen reader enabled
-     *  the toolbar will be placed at the top and in a fixed position.
-     *
-     * @param shouldDisableScroll force disable of the dynamic behavior irrespective of the intrinsic checks.
-     */
-    fun setToolbarBehavior(shouldDisableScroll: Boolean = false) {
-        
-        when (settings.toolbarPosition) {
-            ToolbarPosition.BOTTOM.ordinal -> {
-                // Always use dynamic toolbar behavior (scroll to hide)
-                if (!isPwaTabOrTwaTab) {
-                    setDynamicToolbarBehavior(MozacToolbarPosition.Bottom)
-                } else {
-                    expandToolbarAndMakeItFixed()
-                }
-            }
-            ToolbarPosition.TOP.ordinal -> {
-                // Always use dynamic toolbar behavior unless explicitly disabled
-                if (shouldDisableScroll) {
-                    expandToolbarAndMakeItFixed()
-                } else {
-                    setDynamicToolbarBehavior(MozacToolbarPosition.Top)
-                }
-            }
-        }
-    }
-
-    @VisibleForTesting
-    internal fun expandToolbarAndMakeItFixed() {
-        expand()
-        // Remove behavior from appropriate container
-        val targetView = if (toolbarLayout == R.layout.component_bottom_browser_toolbar) {
-            toolbarContainer ?: layout
-        } else {
-            view
-        }
-        
-        (targetView.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            behavior = null
-        }
-    }
-
-    @VisibleForTesting
-    internal fun setDynamicToolbarBehavior(toolbarPosition: MozacToolbarPosition) {
-        // Only set behavior if engineView is available
-        if (engineView == null) {
-            android.util.Log.w("BrowserToolbar", "Cannot set dynamic toolbar behavior - engineView not provided")
-            return
-        }
-        
-        // Apply behavior to the correct view based on toolbar layout
-        val targetView = if (toolbarLayout == R.layout.component_bottom_browser_toolbar) {
-            toolbarContainer ?: layout
-        } else {
-            view
-        }
-        
-        
-        (targetView.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            behavior = EngineViewScrollingGesturesBehavior(
-                engineView = engineView,
-                dependency = targetView,
-                dependencyGravity = toolbarPosition
-            )
-        } ?: android.util.Log.w("BrowserToolbar", "Failed to apply behavior - layoutParams is not CoordinatorLayout.LayoutParams")
     }
 
     private fun ToolbarMenu.Item.performHapticIfNeeded(view: View) {

@@ -65,9 +65,6 @@ class UnifiedToolbar @JvmOverloads constructor(
     private var browserToolbarView: BrowserToolbarView? = null
     private var contextualToolbar: ContextualBottomToolbar? = null
     
-    // EngineView reference for toolbar behavior
-    private var engineView: EngineView? = null
-    
     // Store reference for tab updates
     private var browserStore: BrowserStore? = null
     
@@ -425,8 +422,7 @@ class UnifiedToolbar @JvmOverloads constructor(
             toolbarPosition = toolbarPos,
             interactor = interactor,
             customTabSession = customTabSession,
-            lifecycleOwner = lifecycleOwner,
-            engineView = engineView
+            lifecycleOwner = lifecycleOwner
         )
         
         // Extract the toolbar from the temporary container
@@ -798,7 +794,6 @@ class UnifiedToolbar @JvmOverloads constructor(
      * Set the engine view for scroll behavior integration
      */
     fun setEngineView(engine: EngineView) {
-        this.engineView = engine
         toolbarSystem.setEngineView(engine)
     }
     
