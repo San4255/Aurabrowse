@@ -55,13 +55,17 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
             onClick = { sideloadXpiFile() }
         )
 
-        // SECURITY: Remote debugging disabled for security
+        // NOTE: requires app restart to take effect (Gecko runtime is created at startup)
         switchPreference(
             preference = requireContext().resources.getString(R.string.key_remote_debugging),
-            isChecked = false,
-            isEnabled = false
+            isChecked = UserPreferences(requireContext()).remoteDebugging
         ) {
-            // Disabled for security reasons
+            UserPreferences(requireContext()).remoteDebugging = it
+            Toast.makeText(
+                context,
+                requireContext().resources.getText(R.string.app_restart),
+                Toast.LENGTH_LONG
+            ).show()
         }
 
         // SECURITY: Third-party certificate trust disabled for security

@@ -68,6 +68,14 @@
         android:title="@string/settings_advanced"
         android:singleLineTitle="false"
         android:summary="@string/settings_advanced_explain"/>
+
+    <!-- Developer tools -->
+    <androidx.preference.Preference
+        android:key="developer_tools"
+        android:icon="@drawable/ic_baseline_find_in_page"
+        android:title="@string/settings_developer_tools"
+        android:singleLineTitle="false"
+        android:summary="@string/settings_developer_tools_explain"/>
     
     <!-- About -->
     <androidx.preference.Preference

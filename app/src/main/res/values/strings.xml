@@ -208,6 +208,32 @@
         name="settings_about_explain"
     >App version, open source licenses…</string>
 
+  <string name="settings_developer_tools">Developer tools</string>
+  <string
+        name="settings_developer_tools_explain"
+    >Network log, JS console, view source…</string>
+
+  <string name="devtools_title">Developer tools</string>
+  <string name="devtools_network">Network</string>
+  <string name="devtools_console">Console</string>
+  <string name="devtools_view_source">View source</string>
+  <string name="devtools_cookies">Cookies</string>
+  <string name="devtools_security">Security</string>
+  <string name="devtools_clear">Clear</string>
+  <string name="devtools_run">Run</string>
+  <string name="devtools_refresh">Refresh</string>
+  <string name="devtools_open_source">Open page source</string>
+  <string name="devtools_no_requests">No requests logged yet. Navigate to a page, then come back here.</string>
+  <string
+        name="devtools_network_note"
+    >Shows navigation requests only (main frames and iframes). XHR, images and WebSocket frames are not exposed to apps by GeckoView.</string>
+  <string name="devtools_no_tab">No active tab.</string>
+  <string name="devtools_no_url">No page loaded.</string>
+  <string name="devtools_no_cookies">No cookies for this site.</string>
+  <string name="devtools_console_hint">Type JavaScript and press Run. Evaluates in the current page.</string>
+  <string name="devtools_console_unavailable">Console bridge extension not ready. Restart the app and try again.</string>
+  <string name="devtools_no_security_info">No security info for the current page.</string>
+
     <string name="javascript_enabled">Enable JavaScript</string>
 
   <string name="clear_tabs">Clear open tabs</string>

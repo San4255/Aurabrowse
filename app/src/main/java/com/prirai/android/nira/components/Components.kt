@@ -165,7 +165,7 @@ open class Components(private val applicationContext: Context) {
         get() = DefaultSettings().apply {
             historyTrackingDelegate = HistoryDelegate(lazyHistoryStorage)
             requestInterceptor = appRequestInterceptor
-            remoteDebuggingEnabled = false // SECURITY: Remote debugging disabled
+            remoteDebuggingEnabled = UserPreferences(applicationContext).remoteDebugging
             supportMultipleWindows = true
             enterpriseRootsEnabled = false // SECURITY: Third-party certs disabled
             if(!UserPreferences(applicationContext).autoFontSize){

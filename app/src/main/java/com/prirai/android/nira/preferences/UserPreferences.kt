@@ -62,8 +62,9 @@ class UserPreferences(appContext: Context) : mozilla.components.support.ktx.andr
     var showTabGroupBar by booleanPreference(SHOW_TAB_GROUP_BAR, true)
     var swipeToRefresh by booleanPreference(SWIPE_TO_REFRESH, true)
 
-    // SECURITY: Remote debugging disabled for production security
-    // var remoteDebugging by booleanPreference(REMOTE_DEBUGGING, false)
+    // Controlled by Settings -> Advanced -> Remote debugging.
+    // NOTE: requires an app restart to take effect (Gecko runtime is created at startup).
+    var remoteDebugging by booleanPreference(REMOTE_DEBUGGING, false)
     var promptExternalDownloader by booleanPreference(PROMPT_EXTERNAL_DOWNLOADER, false)
     var addonSort by intPreference(ADDON_SORT, AddonSortType.RATING.ordinal)
     var showUrlProtocol by booleanPreference(SHOW_URL_PROTOCOL, false)

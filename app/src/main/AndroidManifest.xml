@@ -100,6 +100,14 @@
             android:theme="@style/AppThemeSettings"
         />
 
+    <!-- Developer tools -->
+    <activity
+            android:name=".devtools.DeveloperToolsActivity"
+            android:label="@string/devtools_title"
+            android:exported="false"
+            android:theme="@style/AppThemeSettings"
+        />
+
     <activity
             android:name=".addons.AddonDetailsActivity"
             android:label="@string/mozac_feature_addons_addons"

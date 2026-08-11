@@ -112,6 +112,25 @@ class BrowserApp : Application() {
             }
         }
 
+        // Install the DevTools bridge extension for the in-app developer tools console
+        applicationScope.launch(Dispatchers.Main) {
+            try {
+                components.engine.installBuiltInWebExtension(
+                    url = "resource://android/assets/extensions/devtools/",
+                    id = com.prirai.android.nira.devtools.DevToolsBridge.EXTENSION_ID,
+                    onSuccess = { ext ->
+                        com.prirai.android.nira.devtools.DevToolsBridge.init(components, ext)
+                        android.util.Log.d("DevTools", "Bridge extension installed")
+                    },
+                    onError = { err ->
+                        android.util.Log.e("DevTools", "Bridge extension install FAILED", err)
+                    }
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("DevTools", "Bridge extension install exception", e)
+            }
+        }
+
         // CRITICAL: Eagerly init fxaAuthFeature on the Main thread so that
         // appRequestInterceptor.fxaInterceptor is set before any FxA redirect URL
         // can be processed. Doing this inside an IO coroutine causes a race condition
