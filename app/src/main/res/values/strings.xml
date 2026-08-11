@@ -478,6 +478,7 @@
     <!-- AwesomeBar related strings -->
   <string name="switch_to_tab">Switch to tab</string>
   <string name="move_to_profile">Move to Profile</string>
+  <string name="open_in_profile">Open in Profile</string>
 
   <!-- Addons / fullscreen strings required by default locale (present in values-* translations) -->
   <string name="mozac_feature_addons_failed_to_uninstall">Failed to uninstall %s</string>

@@ -146,6 +146,8 @@ fun TabContextMenu(
     modifier: Modifier = Modifier
 ) {
     var showProfilePicker by remember { mutableStateOf(false) }
+    var showOpenProfilePicker by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -237,6 +239,14 @@ fun TabContextMenu(
                 }
             )
 
+            TabMenuItem(
+                icon = { Icon(painterResource(R.drawable.ic_profile), "Open in Profile") },
+                text = "Open in Profile",
+                onClick = {
+                    showOpenProfilePicker = true
+                }
+            )
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
             TabMenuItem(
@@ -270,6 +280,26 @@ fun TabContextMenu(
             },
             onDismiss = {
                 showProfilePicker = false
+            }
+        )
+    }
+
+    if (showOpenProfilePicker) {
+        ProfilePickerDialog(
+            onConfirm = { profileId ->
+                scope.launch {
+                    val profileManager =
+                        com.prirai.android.nira.browser.profile.ProfileManager.getInstance(context)
+                    profileManager.copyTabToProfile(tab.id, profileId)
+                    (context as? com.prirai.android.nira.BrowserActivity)?.let { activity ->
+                        profileManager.activateProfileAndMode(profileId, activity)
+                    }
+                    showOpenProfilePicker = false
+                    onDismiss()
+                }
+            },
+            onDismiss = {
+                showOpenProfilePicker = false
             }
         )
     }

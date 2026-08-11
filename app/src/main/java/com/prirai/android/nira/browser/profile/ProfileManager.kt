@@ -215,4 +215,46 @@ class ProfileManager(private val context: Context) {
             migrateTabToProfile(tabId, targetProfileId)
         }
     }
+
+    /**
+     * Open a fresh copy of a tab in another profile, leaving the original tab in place.
+     * The copy uses the target profile's storage context, so it starts with no cookies /
+     * login state from the current profile.
+     * @param tabId The ID of the tab to copy
+     * @param targetProfileId The ID of the target profile ("private" for private mode)
+     * @param selectNewTab Whether the new tab should become the selected tab
+     * @return the id of the new tab, or null if the source tab wasn't found
+     */
+    fun copyTabToProfile(tabId: String, targetProfileId: String, selectNewTab: Boolean = true): String? {
+        val store = context.components.store
+        val tab = store.state.tabs.find { it.id == tabId } ?: return null
+
+        val targetContextId = if (targetProfileId == "private") "private" else "profile_$targetProfileId"
+        val isTargetPrivate = targetProfileId == "private"
+
+        return context.components.tabsUseCases.addTab(
+            url = tab.content.url,
+            private = isTargetPrivate,
+            contextId = targetContextId,
+            selectTab = selectNewTab,
+            title = tab.content.title
+        )
+    }
+
+    /**
+     * Switch the active profile and browsing mode so the target profile is visible.
+     * Handles the "private" pseudo-profile and normal profiles.
+     */
+    fun activateProfileAndMode(targetProfileId: String, activity: com.prirai.android.nira.BrowserActivity) {
+        if (targetProfileId == "private") {
+            activity.browsingModeManager.mode = com.prirai.android.nira.browser.BrowsingMode.Private
+        } else {
+            val target = getAllProfiles().find { it.id == targetProfileId }
+            if (target != null) {
+                setActiveProfile(target)
+                activity.browsingModeManager.mode = com.prirai.android.nira.browser.BrowsingMode.Normal
+                activity.browsingModeManager.currentProfile = target
+            }
+        }
+    }
 }

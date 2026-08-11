@@ -523,6 +523,39 @@ class TabsBottomSheetFragment : DialogFragment() {
             .show()
     }
 
+    private fun showOpenInProfileDialog(tabId: String) {
+        val profileManager = com.prirai.android.nira.browser.profile.ProfileManager.getInstance(requireContext())
+        val profiles = profileManager.getAllProfiles()
+
+        val items = profiles.map { "${it.emoji} ${it.name}" }.toMutableList()
+        items.add("🕵️ Private")
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Open in Profile")
+            .setItems(items.toTypedArray()) { _, which ->
+                val targetProfileId = if (which == items.size - 1) {
+                    "private"
+                } else {
+                    profiles[which].id
+                }
+
+                val newTabId = profileManager.copyTabToProfile(tabId, targetProfileId)
+
+                if (newTabId != null) {
+                    (activity as? com.prirai.android.nira.BrowserActivity)?.let { browserActivity ->
+                        profileManager.activateProfileAndMode(targetProfileId, browserActivity)
+                    }
+                    android.widget.Toast.makeText(
+                        requireContext(),
+                        "Opened in ${items[which]}",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun addNewTab() {
         lifecycleScope.launch {
             val isPrivate = browsingModeManager.mode.isPrivate
@@ -939,6 +972,11 @@ class TabsBottomSheetFragment : DialogFragment() {
                                 showMenuState.value = false
                                 menuTabState.value = null
                             },
+                            onOpenInProfile = {
+                                showOpenInProfileDialog(menuTab!!.id)
+                                showMenuState.value = false
+                                menuTabState.value = null
+                            },
                             onRemoveFromGroup = {
                                 lifecycleScope.launch {
                                     tabViewModel?.removeTabFromGroup(menuTab!!.id)
@@ -1028,6 +1066,7 @@ class TabsBottomSheetFragment : DialogFragment() {
         isInGroup: Boolean,
         onDismiss: () -> Unit,
         onMoveToProfile: () -> Unit,
+        onOpenInProfile: () -> Unit,
         onRemoveFromGroup: () -> Unit,
         modifier: Modifier = Modifier
     ) {
@@ -1090,6 +1129,12 @@ class TabsBottomSheetFragment : DialogFragment() {
                         icon = androidx.compose.material.icons.Icons.Default.AccountCircle,
                         text = "Move to Profile",
                         onClick = onMoveToProfile
+                    )
+
+                    MenuOption(
+                        icon = androidx.compose.material.icons.Icons.Default.AccountCircle,
+                        text = "Open in Profile",
+                        onClick = onOpenInProfile
                     )
 
                     MenuOption(

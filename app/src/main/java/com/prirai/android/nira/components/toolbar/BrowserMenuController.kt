@@ -251,6 +251,10 @@ class DefaultBrowserToolbarMenuController(
                 currentSession?.let { showMoveToProfileDialog(it.id) }
             }
 
+            is ToolbarMenu.Item.OpenInProfile -> {
+                currentSession?.let { showOpenInProfileDialog(it.id) }
+            }
+
             is ToolbarMenu.Item.SendTabToDevice -> {
                 currentSession?.let { session ->
                     val sheet = SendTabBottomSheetFragment.newInstance(
@@ -305,6 +309,38 @@ class DefaultBrowserToolbarMenuController(
                     if (migrated) "Moved to ${items[which]}" else "Already in this profile",
                     android.widget.Toast.LENGTH_SHORT
                 ).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showOpenInProfileDialog(tabId: String) {
+        val profileManager = ProfileManager.getInstance(activity)
+        val profiles = profileManager.getAllProfiles()
+
+        val items = profiles.map { "${it.emoji} ${it.name}" }.toMutableList()
+        items.add("🕵️ Private")
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(activity)
+            .setTitle(activity.getString(R.string.open_in_profile))
+            .setItems(items.toTypedArray()) { _, which ->
+                val targetProfileId = if (which == items.size - 1) {
+                    "private"
+                } else {
+                    profiles[which].id
+                }
+
+                val newTabId = profileManager.copyTabToProfile(tabId, targetProfileId)
+
+                if (newTabId != null) {
+                    // Switch to the target profile so the fresh copy is visible
+                    profileManager.activateProfileAndMode(targetProfileId, activity)
+                    android.widget.Toast.makeText(
+                        activity,
+                        "Opened in ${items[which]}",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
             .setNegativeButton("Cancel", null)
             .show()

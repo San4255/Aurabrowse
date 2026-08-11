@@ -18,6 +18,7 @@ interface ToolbarMenu {
         data object NewTab : Item()
         data object NewPrivateTab : Item()
         data object MoveToProfile : Item()
+        data object OpenInProfile : Item()
         data object OpenInApp : Item()
         data object Bookmarks : Item()
         data object History : Item()

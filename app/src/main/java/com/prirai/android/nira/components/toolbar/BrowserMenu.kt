@@ -137,6 +137,7 @@ class BrowserMenu(
             desktopMode,
             BrowserMenuDivider(),
             moveToProfileItem,
+            openInProfileItem,
             newPrivateTabItem,
             newTabItem,
             BrowserMenuDivider(),
@@ -225,6 +226,15 @@ class BrowserMenu(
         imageResource = R.drawable.move_item_24px
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.MoveToProfile)
+    }.apply {
+        visible = { selectedSession != null }
+    }
+
+    val openInProfileItem = ThemedBrowserMenuImageText(
+        label = context.getString(R.string.open_in_profile),
+        imageResource = R.drawable.ic_profile
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.OpenInProfile)
     }.apply {
         visible = { selectedSession != null }
     }

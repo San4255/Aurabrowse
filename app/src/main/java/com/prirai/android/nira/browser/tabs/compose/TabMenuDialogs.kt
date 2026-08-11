@@ -278,6 +278,25 @@ fun ProfilePickerDialog(
                         )
                     }
                 }
+
+                // Private browsing option
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onConfirm("private")
+                            onDismiss()
+                        }
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🕵️ Private",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         },
         confirmButton = {
