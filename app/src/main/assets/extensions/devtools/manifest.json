@@ -6,9 +6,9 @@
       "id": "devtools-bridge@aurabrowse"
     }
   },
-  "version": "0.0.2",
+  "version": "0.0.3",
   "manifest_version": 2,
-  "permissions": ["webRequest"],
+  "permissions": ["webRequest", "<all_urls>"],
   "background": {
     "scripts": ["background.js"]
   },

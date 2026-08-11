@@ -81,6 +81,10 @@ object DevToolsBridge {
     private fun handleNetworkMessage(message: Any) {
         val requestId = extractString(message, "requestId") ?: return
         val event = extractString(message, "event") ?: return
+        android.util.Log.d(
+            "DevTools",
+            "network: $event ${extractString(message, "method")} ${extractString(message, "url")}"
+        )
         NetworkLog.recordEvent(
             requestId = requestId,
             event = event,
