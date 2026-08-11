@@ -11,6 +11,13 @@
             app:singleLineTitle="false"
             app:defaultValue="false" />
 
+        <com.prirai.android.nira.settings.MaterialSwitchPreference
+            app:key="@string/key_devtools_enabled"
+            app:title="@string/devtools_enabled"
+            app:summary="@string/devtools_enabled_summary"
+            app:singleLineTitle="false"
+            app:defaultValue="true" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="Security">

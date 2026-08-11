@@ -51,7 +51,6 @@ import com.prirai.android.nira.theme.applyCompleteTheme
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SecurityInfo
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 /**
@@ -145,11 +144,10 @@ private fun DevToolsScreen(onBack: () -> Unit) {
     }
 }
 
-private val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-
 @Composable
 private fun NetworkTab() {
     val entries by NetworkLog.entries.collectAsState()
+    var expandedId by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -179,38 +177,106 @@ private fun NetworkTab() {
             )
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(entries) { entry ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            text = "${timeFormat.format(Date(entry.time))}  ${entry.url}",
-                            fontSize = 13.sp,
-                            color = FirefoxTheme.colors.textPrimary,
-                            fontFamily = FontFamily.Monospace
-                        )
-                        val flags = mutableListOf<String>()
-                        if (entry.isRedirect) flags.add("redirect")
-                        if (entry.isSubframe) flags.add("subframe")
-                        if (entry.isDirectNavigation) flags.add("direct")
-                        if (!entry.hasUserGesture) flags.add("no-gesture")
-                        entry.lastUrl?.let { flags.add("from: $it") }
-                        if (flags.isNotEmpty()) {
-                            Text(
-                                text = flags.joinToString("  "),
-                                fontSize = 11.sp,
-                                color = FirefoxTheme.colors.textSecondary,
-                                fontFamily = FontFamily.Monospace,
-                                maxLines = 2
-                            )
+                items(entries, key = { it.requestId }) { entry ->
+                    NetworkEntryRow(
+                        entry = entry,
+                        expanded = expandedId == entry.requestId,
+                        onToggle = {
+                            expandedId = if (expandedId == entry.requestId) null else entry.requestId
                         }
-                    }
+                    )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun NetworkEntryRow(
+    entry: NetworkLog.Entry,
+    expanded: Boolean,
+    onToggle: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = entry.method,
+                fontSize = 12.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                color = FirefoxTheme.colors.textAccent
+            )
+            Spacer(Modifier.width(10.dp))
+            entry.statusCode?.let {
+                Text(
+                    text = it.toString(),
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = if (it >= 400) FirefoxTheme.colors.textWarning else FirefoxTheme.colors.textAccent
+                )
+            }
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = entry.requestType,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                color = FirefoxTheme.colors.textSecondary,
+                maxLines = 1
+            )
+        }
+        Text(
+            text = entry.url,
+            fontSize = 12.sp,
+            fontFamily = FontFamily.Monospace,
+            color = FirefoxTheme.colors.textPrimary,
+            maxLines = if (expanded) Int.MAX_VALUE else 2
+        )
+        if (expanded) {
+            Spacer(Modifier.height(4.dp))
+            if (entry.requestHeaders.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.devtools_request_headers),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = FirefoxTheme.colors.textSecondary
+                )
+                entry.requestHeaders.forEach { HeaderRow(it) }
+            }
+            if (entry.responseHeaders.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.devtools_response_headers),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = FirefoxTheme.colors.textSecondary
+                )
+                entry.responseHeaders.forEach { HeaderRow(it) }
+            }
+            if (entry.requestHeaders.isEmpty() && entry.responseHeaders.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.devtools_no_headers),
+                    fontSize = 11.sp,
+                    color = FirefoxTheme.colors.textDisabled
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeaderRow(header: NetworkLog.Header) {
+    Text(
+        text = "${header.name}: ${header.value}",
+        fontSize = 11.sp,
+        fontFamily = FontFamily.Monospace,
+        color = FirefoxTheme.colors.textSecondary,
+        modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+    )
 }
 
 @Composable

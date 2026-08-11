@@ -65,6 +65,10 @@ class UserPreferences(appContext: Context) : mozilla.components.support.ktx.andr
     // Controlled by Settings -> Advanced -> Remote debugging.
     // NOTE: requires an app restart to take effect (Gecko runtime is created at startup).
     var remoteDebugging by booleanPreference(REMOTE_DEBUGGING, false)
+
+    // Controlled by Settings -> Advanced -> Developer tools.
+    // When off, the DevTools bridge extension is not installed (requires app restart).
+    var devtoolsEnabled by booleanPreference(DEVTOOLS_ENABLED, true)
     var promptExternalDownloader by booleanPreference(PROMPT_EXTERNAL_DOWNLOADER, false)
     var addonSort by intPreference(ADDON_SORT, AddonSortType.RATING.ordinal)
     var showUrlProtocol by booleanPreference(SHOW_URL_PROTOCOL, false)
@@ -170,6 +174,7 @@ class UserPreferences(appContext: Context) : mozilla.components.support.ktx.andr
         const val SHOW_TAB_GROUP_BAR = "show_tab_group_bar"
         const val SWIPE_TO_REFRESH = "swipe_to_refresh"
         const val REMOTE_DEBUGGING = "remote_debugging"
+        const val DEVTOOLS_ENABLED = "devtools_enabled"
         const val PROMPT_EXTERNAL_DOWNLOADER = "prompt_external_downloader"
         const val SHOW_URL_PROTOCOL = "show_url_protocol"
         const val SEARCH_SUGGESTIONS = "search_suggestions"

@@ -112,22 +112,25 @@ class BrowserApp : Application() {
             }
         }
 
-        // Install the DevTools bridge extension for the in-app developer tools console
-        applicationScope.launch(Dispatchers.Main) {
-            try {
-                components.engine.installBuiltInWebExtension(
-                    url = "resource://android/assets/extensions/devtools/",
-                    id = com.prirai.android.nira.devtools.DevToolsBridge.EXTENSION_ID,
-                    onSuccess = { ext ->
-                        com.prirai.android.nira.devtools.DevToolsBridge.init(components, ext)
-                        android.util.Log.d("DevTools", "Bridge extension installed")
-                    },
-                    onError = { err ->
-                        android.util.Log.e("DevTools", "Bridge extension install FAILED", err)
-                    }
-                )
-            } catch (e: Exception) {
-                android.util.Log.e("DevTools", "Bridge extension install exception", e)
+        // Install the DevTools bridge extension for the in-app developer tools (network
+        // log, JS console, cookies). Gated on the setting — requires app restart to apply.
+        if (com.prirai.android.nira.preferences.UserPreferences(this).devtoolsEnabled) {
+            applicationScope.launch(Dispatchers.Main) {
+                try {
+                    components.engine.installBuiltInWebExtension(
+                        url = "resource://android/assets/extensions/devtools/",
+                        id = com.prirai.android.nira.devtools.DevToolsBridge.EXTENSION_ID,
+                        onSuccess = { ext ->
+                            com.prirai.android.nira.devtools.DevToolsBridge.init(components, ext)
+                            android.util.Log.d("DevTools", "Bridge extension installed")
+                        },
+                        onError = { err ->
+                            android.util.Log.e("DevTools", "Bridge extension install FAILED", err)
+                        }
+                    )
+                } catch (e: Exception) {
+                    android.util.Log.e("DevTools", "Bridge extension install exception", e)
+                }
             }
         }
 

@@ -5,51 +5,79 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 
 /**
- * In-memory log of navigation requests, recorded by [com.prirai.android.nira.request.AppRequestInterceptor].
- * GeckoView only surfaces top-level navigation loads to apps (not XHR/images/WebSockets),
- * so this is a request-level log, not a full network capture.
+ * In-memory network log, fed by the DevTools bridge extension's background script via
+ * browser.webRequest (the only GeckoView API that exposes real request headers, method,
+ * type and status). Request and response events are correlated by [Entry.requestId] so
+ * each entry shows both header sets and the status code in one row.
  */
 object NetworkLog {
+
+    data class Header(val name: String, val value: String)
 
     data class Entry(
         val time: Long,
         val url: String,
-        val lastUrl: String?,
-        val isRedirect: Boolean,
-        val isSubframe: Boolean,
-        val isDirectNavigation: Boolean,
-        val hasUserGesture: Boolean
+        val method: String,
+        val requestType: String,
+        val statusCode: Int?,
+        val requestId: String,
+        val requestHeaders: List<Header>,
+        val responseHeaders: List<Header>
     )
 
     private const val MAX_ENTRIES = 300
+    private const val MAX_PENDING = 500
 
     private val _entries = MutableStateFlow<List<Entry>>(emptyList())
     val entries: StateFlow<List<Entry>> = _entries
 
-    fun record(
+    // requestId -> entry still awaiting its response event (webRequest correlates the two).
+    private val pending =
+        java.util.Collections.synchronizedMap(java.util.LinkedHashMap<String, Entry>())
+
+    /**
+     * Records one webRequest event. Call with event="request" (onBeforeSendHeaders) and
+     * event="response" (onHeadersReceived); the two are merged per requestId. May be called
+     * from the Gecko message thread, so all state here is thread-safe.
+     */
+    fun recordEvent(
+        requestId: String,
+        event: String,
         url: String,
-        lastUrl: String?,
-        isRedirect: Boolean,
-        isSubframe: Boolean,
-        isDirectNavigation: Boolean,
-        hasUserGesture: Boolean
+        method: String,
+        requestType: String,
+        statusCode: Int?,
+        headers: List<Header>
     ) {
-        _entries.update {
-            (listOf(
-                Entry(
-                    time = System.currentTimeMillis(),
-                    url = url,
-                    lastUrl = lastUrl,
-                    isRedirect = isRedirect,
-                    isSubframe = isSubframe,
-                    isDirectNavigation = isDirectNavigation,
-                    hasUserGesture = hasUserGesture
-                )
-            ) + it).take(MAX_ENTRIES)
+        if (event == "response") {
+            val merged = pending[requestId]?.copy(statusCode = statusCode, responseHeaders = headers)
+            if (merged != null) {
+                pending.remove(requestId)
+                _entries.update { list ->
+                    (listOf(merged) + list.filterNot { it.requestId == requestId }).take(MAX_ENTRIES)
+                }
+                return
+            }
         }
+        val entry = Entry(
+            time = System.currentTimeMillis(),
+            url = url,
+            method = method,
+            requestType = requestType,
+            statusCode = if (event == "response") statusCode else null,
+            requestId = requestId,
+            requestHeaders = if (event == "request") headers else emptyList(),
+            responseHeaders = if (event == "response") headers else emptyList()
+        )
+        if (event == "request") {
+            if (pending.size >= MAX_PENDING) pending.remove(pending.keys.first())
+            pending[requestId] = entry
+        }
+        _entries.update { (listOf(entry) + it).take(MAX_ENTRIES) }
     }
 
     fun clear() {
+        pending.clear()
         _entries.value = emptyList()
     }
 }

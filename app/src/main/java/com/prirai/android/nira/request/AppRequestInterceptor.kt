@@ -8,7 +8,6 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.prirai.android.nira.addons.AddonsActivity
-import com.prirai.android.nira.devtools.NetworkLog
 import com.prirai.android.nira.ext.components
 import com.prirai.android.nira.preferences.UserPreferences
 import kotlinx.coroutines.CoroutineScope
@@ -55,14 +54,10 @@ class AppRequestInterceptor(val context: Context) : RequestInterceptor {
         isDirectNavigation: Boolean,
         isSubframeRequest: Boolean
     ): InterceptionResponse? {
-        NetworkLog.record(
-            url = uri,
-            lastUrl = lastUri,
-            isRedirect = isRedirect,
-            isSubframe = isSubframeRequest,
-            isDirectNavigation = isDirectNavigation,
-            hasUserGesture = hasUserGesture
-        )
+        // NOTE: network logging now happens via the DevTools bridge extension's
+        // browser.webRequest background script (see DevToolsBridge/NetworkLog), which
+        // captures real headers/method/type/status for every request — RequestInterceptor
+        // only sees navigation loads and no headers.
 
         if (uri.startsWith("https://accounts.firefox.com")) {
             Log.d("FxaAuth", "onLoadRequest: url=$uri fxaInterceptorNull=${fxaInterceptor == null}")

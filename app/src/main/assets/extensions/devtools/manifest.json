@@ -1,13 +1,17 @@
 {
   "name": "Aurabrowse DevTools Bridge",
-  "description": "Evaluates JavaScript on pages and reports results to Aurabrowse's in-app developer tools.",
+  "description": "Evaluates JavaScript on pages, captures network requests and reports results to Aurabrowse's in-app developer tools.",
   "browser_specific_settings": {
     "gecko": {
       "id": "devtools-bridge@aurabrowse"
     }
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
   "manifest_version": 2,
+  "permissions": ["webRequest"],
+  "background": {
+    "scripts": ["background.js"]
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

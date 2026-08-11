@@ -68,6 +68,19 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
             ).show()
         }
 
+        // NOTE: the bridge extension is installed at app startup, so a restart is needed
+        switchPreference(
+            preference = requireContext().resources.getString(R.string.key_devtools_enabled),
+            isChecked = UserPreferences(requireContext()).devtoolsEnabled
+        ) {
+            UserPreferences(requireContext()).devtoolsEnabled = it
+            Toast.makeText(
+                context,
+                requireContext().resources.getText(R.string.app_restart),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
         // SECURITY: Third-party certificate trust disabled for security
         switchPreference(
             preference = requireContext().resources.getString(R.string.key_trust_third_party_certs),

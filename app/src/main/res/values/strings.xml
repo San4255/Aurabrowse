@@ -71,6 +71,10 @@
         translatable="false"
     >remote_debugging</string>
   <string
+        name="key_devtools_enabled"
+        translatable="false"
+    >devtools_enabled</string>
+  <string
         name="key_export_bookmarks"
         translatable="false"
     >export_bookmarks</string>
@@ -212,6 +216,10 @@
   <string
         name="settings_developer_tools_explain"
     >Network log, JS console, view source…</string>
+  <string name="devtools_enabled">Developer tools</string>
+  <string
+        name="devtools_enabled_summary"
+    >Network log, JS console, cookies and security info. Requires restart to apply.</string>
 
   <string name="devtools_title">Developer tools</string>
   <string name="devtools_network">Network</string>
@@ -226,7 +234,10 @@
   <string name="devtools_no_requests">No requests logged yet. Navigate to a page, then come back here.</string>
   <string
         name="devtools_network_note"
-    >Shows navigation requests only (main frames and iframes). XHR, images and WebSocket frames are not exposed to apps by GeckoView.</string>
+    >Captured via browser.webRequest. Tap an entry for request &amp; response headers.</string>
+  <string name="devtools_request_headers">Request headers</string>
+  <string name="devtools_response_headers">Response headers</string>
+  <string name="devtools_no_headers">No headers captured.</string>
   <string name="devtools_no_tab">No active tab.</string>
   <string name="devtools_no_url">No page loaded.</string>
   <string name="devtools_no_cookies">No cookies for this site.</string>

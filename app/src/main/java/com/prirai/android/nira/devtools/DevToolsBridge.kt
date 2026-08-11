@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Collections
 
@@ -28,6 +29,10 @@ object DevToolsBridge {
 
     const val EXTENSION_ID = "devtools-bridge@aurabrowse"
     const val PORT_NAME = "aurabrowse-devtools"
+
+    // Native-app port name used by background.js's browser.runtime.connectNative() to
+    // stream browser.webRequest events to the app.
+    const val NETWORK_NATIVE_APP = "network"
 
     @Volatile
     var extension: WebExtension? = null
@@ -58,15 +63,36 @@ object DevToolsBridge {
         override fun onPortConnected(port: Port) = Unit
 
         override fun onPortMessage(message: Any, port: Port) {
-            // Only surface eval results; ignore the "ready" ping.
-            if (extractString(message, "type") != "evalResult") return
-            val ok = extractString(message, "ok") == "true"
-            val value = extractString(message, "result") ?: extractString(message, "error") ?: ""
-            when (extractString(message, "target")) {
-                "cookies" -> _cookies.value = CookiesResult(ok = ok, value = value)
-                else -> appendConsole(if (ok) "› $value" else "✗ $value")
+            when (extractString(message, "type")) {
+                "network" -> handleNetworkMessage(message)
+                // Only surface eval results; ignore the "ready" ping.
+                "evalResult" -> {
+                    val ok = extractString(message, "ok") == "true"
+                    val value = extractString(message, "result") ?: extractString(message, "error") ?: ""
+                    when (extractString(message, "target")) {
+                        "cookies" -> _cookies.value = CookiesResult(ok = ok, value = value)
+                        else -> appendConsole(if (ok) "› $value" else "✗ $value")
+                    }
+                }
             }
         }
+    }
+
+    private fun handleNetworkMessage(message: Any) {
+        val requestId = extractString(message, "requestId") ?: return
+        val event = extractString(message, "event") ?: return
+        NetworkLog.recordEvent(
+            requestId = requestId,
+            event = event,
+            url = extractString(message, "url") ?: "",
+            method = extractString(message, "method") ?: "",
+            requestType = extractString(message, "requestType") ?: "",
+            statusCode = extractInt(message, "statusCode"),
+            headers = extractHeaders(
+                message,
+                if (event == "request") "requestHeaders" else "responseHeaders"
+            )
+        )
     }
 
     /** Installs the message handler for every existing session and every future one. */
@@ -87,6 +113,10 @@ object DevToolsBridge {
                 }
             }
         }
+
+        // Receives browser.webRequest events streamed by background.js over the
+        // "network" native-app port.
+        extension.registerBackgroundMessageHandler(NETWORK_NATIVE_APP, messageHandler)
     }
 
     private fun register(session: EngineSession) {
@@ -136,5 +166,34 @@ object DevToolsBridge {
         is JSONObject -> if (message.has(key)) message.get(key)?.toString() else null
         is Map<*, *> -> message[key]?.toString()
         else -> null
+    }
+
+    private fun extractInt(message: Any, key: String): Int? = when (message) {
+        is JSONObject -> (message.opt(key) as? Number)?.toInt()
+        is Map<*, *> -> (message[key] as? Number)?.toInt()
+        else -> null
+    }
+
+    private fun extractHeaders(message: Any, key: String): List<NetworkLog.Header> {
+        val raw: Any? = when (message) {
+            is JSONObject -> if (message.has(key)) message.get(key) else null
+            is Map<*, *> -> message[key]
+            else -> null
+        } ?: return emptyList()
+        return when (raw) {
+            is JSONArray -> (0 until raw.length()).mapNotNull { i ->
+                raw.optJSONObject(i)?.let { h ->
+                    h.optString("name").takeIf { it.isNotEmpty() }
+                        ?.let { NetworkLog.Header(it, h.optString("value")) }
+                }
+            }
+            is List<*> -> raw.mapNotNull { h ->
+                val map = h as? Map<*, *> ?: return@mapNotNull null
+                val name = map["name"]?.toString() ?: return@mapNotNull null
+                name.takeIf { it.isNotEmpty() }
+                    ?.let { NetworkLog.Header(it, map["value"]?.toString() ?: "") }
+            }
+            else -> emptyList()
+        }
     }
 }
