@@ -76,14 +76,14 @@ object DevToolsBridge {
 
         // Existing tabs (including ones restored from a previous session).
         components.store.state.tabs.forEach { tab ->
-            tab.engineSession?.let { register(it) }
+            tab.engineState.engineSession?.let { register(it) }
         }
 
         // Future tabs.
         scope.launch {
             components.store.stateFlow.collect { state ->
                 state.tabs.forEach { tab ->
-                    tab.engineSession?.let { register(it) }
+                    tab.engineState.engineSession?.let { register(it) }
                 }
             }
         }
@@ -102,7 +102,7 @@ object DevToolsBridge {
     private fun sendEval(code: String, target: String): Boolean {
         val components = components ?: return false
         val ext = extension ?: return false
-        val session = components.store.state.selectedTab?.engineSession ?: return false
+        val session = components.store.state.selectedTab?.engineState?.engineSession ?: return false
 
         register(session)
         val port = ext.getConnectedPort(PORT_NAME, session) ?: return false
@@ -124,7 +124,7 @@ object DevToolsBridge {
     fun isPortConnected(): Boolean {
         val components = components ?: return false
         val ext = extension ?: return false
-        val session = components.store.state.selectedTab?.engineSession ?: return false
+        val session = components.store.state.selectedTab?.engineState?.engineSession ?: return false
         return ext.getConnectedPort(PORT_NAME, session) != null
     }
 
