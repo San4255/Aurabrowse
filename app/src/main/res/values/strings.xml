@@ -477,6 +477,7 @@
 
     <!-- AwesomeBar related strings -->
   <string name="switch_to_tab">Switch to tab</string>
+  <string name="move_to_profile">Move to Profile</string>
 
   <!-- Contextual Bottom Toolbar strings -->
   <string name="back">Back</string>

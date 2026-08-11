@@ -30,7 +30,7 @@ class SearchEngineList(private val context: Context) {
                 icon = getIconBitmap(com.prirai.android.nira.R.drawable.google),
                 type = SearchEngine.Type.BUNDLED,
                 resultUrls = listOf("https://www.google.com/?q={searchTerms}"),
-                suggestUrl = "https://www.google.com/"
+                suggestUrl = "https://suggestqueries.google.com/complete/search?output=firefox&q={searchTerms}"
             ),
             SearchEngine(
                 id = "ddg",
@@ -38,7 +38,7 @@ class SearchEngineList(private val context: Context) {
                 icon = getIconBitmap(com.prirai.android.nira.R.drawable.duckduckgo),
                 type = SearchEngine.Type.BUNDLED,
                 resultUrls = listOf("https://www.duckduckgo.com/?q={searchTerms}"),
-                suggestUrl = "https://www.duckduckgo.com/"
+                suggestUrl = "https://duckduckgo.com/ac/?q={searchTerms}"
             ),
             SearchEngine(
                 id = "bing",
@@ -46,7 +46,7 @@ class SearchEngineList(private val context: Context) {
                 icon = getIconBitmap(com.prirai.android.nira.R.drawable.microsoft_bing),
                 type = SearchEngine.Type.BUNDLED,
                 resultUrls = listOf("https://www.bing.com/?q={searchTerms}"),
-                suggestUrl = "https://www.bing.com/"
+                suggestUrl = "https://api.bing.com/osjson.aspx?query={searchTerms}"
             ),
             SearchEngine(
                 id = "baidu",
@@ -54,7 +54,7 @@ class SearchEngineList(private val context: Context) {
                 icon = getIconBitmap(com.prirai.android.nira.R.drawable.baidu),
                 type = SearchEngine.Type.CUSTOM,
                 resultUrls = listOf("https://www.baidu.com/s?wd={searchTerms}"),
-                suggestUrl = "https://www.baidu.com/"
+                suggestUrl = "https://suggestion.baidu.com/su?wd={searchTerms}"
             ),
             SearchEngine(
                 id = "yandex",
@@ -62,7 +62,7 @@ class SearchEngineList(private val context: Context) {
                 icon = getIconBitmap(com.prirai.android.nira.R.drawable.yandex),
                 type = SearchEngine.Type.CUSTOM,
                 resultUrls = listOf("https://yandex.com/search/?text={searchTerms}"),
-                suggestUrl = "https://www.yandex.com/"
+                suggestUrl = "https://suggest.yandex.com/suggest-ff.cgi?part={searchTerms}"
             ),
             SearchEngine(
                 id = "naver",
@@ -70,7 +70,7 @@ class SearchEngineList(private val context: Context) {
                 icon = getIconBitmap(com.prirai.android.nira.R.drawable.naver),
                 type = SearchEngine.Type.CUSTOM,
                 resultUrls = listOf("https://m.search.naver.com/search.naver?query={searchTerms}"),
-                suggestUrl = "https://www.naver.com/"
+                suggestUrl = "https://ac.search.naver.com/nx/ac?of=os&q={searchTerms}"
             ),
             SearchEngine(
                 id = "qwant",

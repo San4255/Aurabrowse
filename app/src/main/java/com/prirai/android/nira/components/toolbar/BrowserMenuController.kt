@@ -6,6 +6,7 @@ import androidx.navigation.NavController
 import com.prirai.android.nira.BrowserActivity
 import com.prirai.android.nira.BrowserAnimator
 import com.prirai.android.nira.R
+import com.prirai.android.nira.browser.profile.ProfileManager
 import com.prirai.android.nira.browser.sync.SendTabBottomSheetFragment
 import com.prirai.android.nira.ext.components
 import com.prirai.android.nira.history.HistoryActivity
@@ -246,6 +247,10 @@ class DefaultBrowserToolbarMenuController(
                 activity.showSslDialog()
             }
 
+            is ToolbarMenu.Item.MoveToProfile -> {
+                currentSession?.let { showMoveToProfileDialog(it.id) }
+            }
+
             is ToolbarMenu.Item.SendTabToDevice -> {
                 currentSession?.let { session ->
                     val sheet = SendTabBottomSheetFragment.newInstance(
@@ -256,5 +261,52 @@ class DefaultBrowserToolbarMenuController(
                 }
             }
         }
+    }
+
+    private fun showMoveToProfileDialog(tabId: String) {
+        val profileManager = ProfileManager.getInstance(activity)
+        val profiles = profileManager.getAllProfiles()
+
+        val items = profiles.map { "${it.emoji} ${it.name}" }.toMutableList()
+        items.add("🕵️ Private")
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(activity)
+            .setTitle(activity.getString(R.string.move_to_profile))
+            .setItems(items.toTypedArray()) { _, which ->
+                val targetProfileId = if (which == items.size - 1) {
+                    "private"
+                } else {
+                    profiles[which].id
+                }
+
+                val migrated = profileManager.migrateTabToProfile(tabId, targetProfileId)
+
+                // After moving, switch the active profile so the moved tab is visible
+                if (migrated) {
+                    when (targetProfileId) {
+                        "private" -> {
+                            activity.browsingModeManager.mode =
+                                com.prirai.android.nira.browser.BrowsingMode.Private
+                        }
+                        else -> {
+                            val target = profiles.find { it.id == targetProfileId }
+                            if (target != null) {
+                                profileManager.setActiveProfile(target)
+                                activity.browsingModeManager.mode =
+                                    com.prirai.android.nira.browser.BrowsingMode.Normal
+                                activity.browsingModeManager.currentProfile = target
+                            }
+                        }
+                    }
+                }
+
+                android.widget.Toast.makeText(
+                    activity,
+                    if (migrated) "Moved to ${items[which]}" else "Already in this profile",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 }

@@ -134,9 +134,9 @@ class BrowserToolbarView(
 
                 display.urlFormatter =
                     if (UserPreferences(context).showUrlProtocol) {
-                            url -> url
+                            url -> if (url.isHomepage()) "" else url
                     } else {
-                            url -> smartUrlDisplay(url)
+                            url -> if (url.isHomepage()) "" else smartUrlDisplay(url)
                     }
 
                 display.colors = display.colors.copy(
@@ -299,6 +299,14 @@ class BrowserToolbarView(
         ) {
             view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         }
+    }
+
+    /**
+     * Internal homepage/blank pages should not be shown as a URL in the address bar.
+     */
+    private fun CharSequence.isHomepage(): Boolean {
+        val value = toString()
+        return value.isEmpty() || value == "about:homepage" || value == "about:home" || value == "about:blank"
     }
 
     /**

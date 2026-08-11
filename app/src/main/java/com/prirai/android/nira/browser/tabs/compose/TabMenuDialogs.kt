@@ -1,8 +1,10 @@
 package com.prirai.android.nira.browser.tabs.compose
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -18,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 /**
@@ -209,20 +212,36 @@ fun ColorPickerDialog(
  * @param onConfirm Callback with selected profile ID when user picks a profile
  * @param onDismiss Callback when dialog is dismissed without picking
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProfilePickerDialog(
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // TODO: Get actual profiles from ProfileManager
-    // This is a placeholder implementation with hardcoded profiles
-    val profiles = remember {
-        listOf(
-            "default" to "Default Profile",
-            "work" to "Work Profile",
-            "personal" to "Personal Profile"
+    // Read real profiles from ProfileManager instead of the old hardcoded placeholder
+    val context = LocalContext.current
+    val profileManager = remember {
+        com.prirai.android.nira.browser.profile.ProfileManager.getInstance(context)
+    }
+    var profiles by remember { mutableStateOf(profileManager.getAllProfiles()) }
+    var editingProfile by remember { mutableStateOf<com.prirai.android.nira.browser.profile.BrowserProfile?>(null) }
+
+    if (editingProfile != null) {
+        com.prirai.android.nira.browser.profile.ProfileEditDialog(
+            profile = editingProfile!!,
+            onDismiss = { editingProfile = null },
+            onConfirm = { name, color, emoji ->
+                profileManager.updateProfile(editingProfile!!.copy(name = name, color = color, emoji = emoji))
+                editingProfile = null
+                profiles = profileManager.getAllProfiles()
+            },
+            onDelete = {
+                profileManager.deleteProfile(editingProfile!!.id)
+                editingProfile = null
+                profiles = profileManager.getAllProfiles()
+            }
         )
+        return
     }
 
     AlertDialog(
@@ -232,21 +251,30 @@ fun ProfilePickerDialog(
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                profiles.forEach { (profileId, profileName) ->
+                profiles.forEach { profile ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                onConfirm(profileId)
-                                onDismiss()
-                            }
+                            .combinedClickable(
+                                onClick = {
+                                    onConfirm(profile.id)
+                                    onDismiss()
+                                },
+                                onLongClick = { editingProfile = profile }
+                            )
                             .padding(vertical = 12.dp),
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = profileName,
-                            style = MaterialTheme.typography.bodyLarge
+                            text = "${profile.emoji} ${profile.name}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "✎",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

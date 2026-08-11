@@ -136,6 +136,7 @@ class BrowserMenu(
             sendTabItem,
             desktopMode,
             BrowserMenuDivider(),
+            moveToProfileItem,
             newPrivateTabItem,
             newTabItem,
             BrowserMenuDivider(),
@@ -217,6 +218,15 @@ class BrowserMenu(
         R.drawable.mozac_ic_tab_new_24
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.NewTab)
+    }
+
+    val moveToProfileItem = ThemedBrowserMenuImageText(
+        label = context.getString(R.string.move_to_profile),
+        imageResource = R.drawable.move_item_24px
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.MoveToProfile)
+    }.apply {
+        visible = { selectedSession != null }
     }
 
     val newPrivateTabItem = ThemedBrowserMenuImageText(

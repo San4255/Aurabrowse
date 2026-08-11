@@ -256,8 +256,7 @@ fun ProfileEditDialog(
                     onValueChange = { profileName = it },
                     label = { Text("Profile Name") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    enabled = !profile.isDefault
+                    singleLine = true
                 )
                 
                 Spacer(modifier = Modifier.height(24.dp))

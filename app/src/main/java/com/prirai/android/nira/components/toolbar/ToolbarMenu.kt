@@ -17,6 +17,7 @@ interface ToolbarMenu {
         data object InstallWebApp : Item()
         data object NewTab : Item()
         data object NewPrivateTab : Item()
+        data object MoveToProfile : Item()
         data object OpenInApp : Item()
         data object Bookmarks : Item()
         data object History : Item()

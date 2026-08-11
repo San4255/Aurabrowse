@@ -26,6 +26,7 @@ class ProfileManager(private val context: Context) {
         private const val KEY_PROFILES = "profiles"
         private const val KEY_ACTIVE_PROFILE_ID = "active_profile_id"
         private const val KEY_LAST_PRIVATE_PROFILE = "last_private_profile"
+        private const val KEY_DEFAULT_PROFILE_NAME = "default_profile_name"
         
         @Volatile
         private var instance: ProfileManager? = null
@@ -50,12 +51,21 @@ class ProfileManager(private val context: Context) {
         }
         
         // Always ensure default profile exists
-        val defaultProfile = BrowserProfile.getDefaultProfile()
+        val defaultProfile = getDefaultProfile()
         return if (profiles.none { it.id == defaultProfile.id }) {
             listOf(defaultProfile) + profiles
         } else {
             profiles
         }
+    }
+
+    /**
+     * Default profile with the user-renamed name applied (if any).
+     */
+    private fun getDefaultProfile(): BrowserProfile {
+        val base = BrowserProfile.getDefaultProfile()
+        val storedName = prefs.getString(KEY_DEFAULT_PROFILE_NAME, null)
+        return if (storedName.isNullOrBlank()) base else base.copy(name = storedName)
     }
     
     /**
@@ -63,7 +73,7 @@ class ProfileManager(private val context: Context) {
      */
     fun getActiveProfile(): BrowserProfile {
         val activeId = prefs.getString(KEY_ACTIVE_PROFILE_ID, "default")
-        return getAllProfiles().find { it.id == activeId } ?: BrowserProfile.getDefaultProfile()
+        return getAllProfiles().find { it.id == activeId } ?: getDefaultProfile()
     }
     
     /**
@@ -96,10 +106,11 @@ class ProfileManager(private val context: Context) {
      */
     fun updateProfile(profile: BrowserProfile) {
         if (profile.isDefault) {
-            // Can't modify default profile name/icon, only in-memory representation
+            // Default profile isn't stored in the profiles list, keep its name override separately
+            prefs.edit { putString(KEY_DEFAULT_PROFILE_NAME, profile.name) }
             return
         }
-        
+
         val profiles = getAllProfiles().toMutableList()
         val index = profiles.indexOfFirst { it.id == profile.id }
         if (index != -1) {
@@ -122,7 +133,7 @@ class ProfileManager(private val context: Context) {
         
         // If deleted profile was active, switch to default
         if (getActiveProfile().id == profileId) {
-            setActiveProfile(BrowserProfile.getDefaultProfile())
+            setActiveProfile(getDefaultProfile())
         }
         
         // Clean up profile-specific storage
