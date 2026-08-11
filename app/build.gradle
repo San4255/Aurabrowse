@@ -55,7 +55,11 @@ android {
         abi {
             enable = true
             reset()
-            include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+            if (project.hasProperty('abiFilter')) {
+                include project.property('abiFilter')
+            } else {
+                include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+            }
             universalApk = false
         }
     }

@@ -63,13 +63,16 @@ class DeveloperToolsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        applyCompleteTheme(this)
-        enableEdgeToEdgeMode()
+        // NOTE: setContent must come first so the decor view exists — applyCompleteTheme
+        // touches window.insetsController (ThemeManager.applySystemBarsTheme) and NPEs
+        // with a null decor view. Mirrors SettingsActivity's content-then-theme order.
         setContent {
             FirefoxTheme(darkTheme = isAppInDarkTheme()) {
                 DevToolsScreen(onBack = { finish() })
             }
         }
+        applyCompleteTheme(this)
+        enableEdgeToEdgeMode()
     }
 }
 
