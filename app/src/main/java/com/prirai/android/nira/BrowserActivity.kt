@@ -566,6 +566,30 @@ open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2
      * Setup search engines - extracted to separate method for deferred initialization
      */
     private fun setupSearchEngines() {
+        // Seed the store with the bundled engines. This app defines its engines in
+        // SearchEngineList (it ships no mozilla searchplugins assets), so without this the
+        // store's search state stays empty, selectedOrDefaultSearchEngine is null, and every
+        // search silently falls back to loading the term as a URL ("address not found").
+        val bundledEngines = SearchEngineList(this).getEngines()
+        val chosenEngine = bundledEngines[UserPreferences(this).searchEngineChoice]
+        components.store.dispatch(
+            mozilla.components.browser.state.action.SearchAction.SetSearchEnginesAction(
+                regionSearchEngines = bundledEngines,
+                customSearchEngines = emptyList(),
+                hiddenSearchEngines = emptyList(),
+                disabledSearchEngineIds = emptyList(),
+                additionalSearchEngines = emptyList(),
+                additionalAvailableSearchEngines = emptyList(),
+                userSelectedSearchEngineId = chosenEngine.id,
+                userSelectedSearchEngineName = chosenEngine.name,
+                userSelectedPrivateSearchEngineId = chosenEngine.id,
+                userSelectedPrivateSearchEngineName = chosenEngine.name,
+                regionDefaultSearchEngineId = chosenEngine.id,
+                regionSearchEnginesOrder = bundledEngines.map { it.id },
+                searchEnginesConfigurationId = null,
+            )
+        )
+
         //TODO: Move to settings page so app restart no longer required
         //TODO: Differentiate between using search engine / adding to list - the code below removes all from list as I don't support adding to list, only setting as default
         for (i in components.store.state.search.customSearchEngines) {

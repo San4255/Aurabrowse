@@ -1053,16 +1053,40 @@ class TabViewModel(
                 else -> "profile_$profileId"
             }
 
-            // Update the group
-            groupManager.updateGroup(
-                groupId = groupId,
-                name = group.name,
-                color = group.color,
-                tabIds = group.tabIds,
-                contextId = newContextId
-            )
+            // Actually migrate the tabs. migrateTabToProfile recreates each tab
+            // (GeckoView storage contexts are fixed at session creation), so the
+            // group must be rebuilt with the new tab ids.
+            val newTabIds = com.prirai.android.nira.browser.profile.ProfileManager
+                .getInstance(context)
+                .migrateTabsToProfile(group.tabIds, profileId)
+
+            if (newTabIds.isNotEmpty()) {
+                groupManager.updateGroup(
+                    groupId = groupId,
+                    name = group.name,
+                    color = group.color,
+                    tabIds = newTabIds,
+                    contextId = newContextId
+                )
+            }
 
             // Refresh the UI
+            _currentProfileId.value?.let { currentProfile ->
+                refreshGroupsForProfile(currentProfile)
+            }
+        }
+    }
+
+    /**
+     * Move a single tab to another profile.
+     */
+    fun moveTabToProfile(tabId: String, profileId: String) {
+        viewModelScope.launch {
+            com.prirai.android.nira.browser.profile.ProfileManager
+                .getInstance(context)
+                .migrateTabToProfile(tabId, profileId)
+
+            // Refresh the UI (the tab left the current profile)
             _currentProfileId.value?.let { currentProfile ->
                 refreshGroupsForProfile(currentProfile)
             }

@@ -4,6 +4,7 @@ import androidx.navigation.NavController
 import com.prirai.android.nira.BrowserActivity
 import com.prirai.android.nira.BrowserDirection
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
 
@@ -48,7 +49,8 @@ class SearchDialogController(
         clearToolbarFocus()
 
         val searchEngine = fragmentStore.state.searchEngineSource.searchEngine
-        
+            ?: store.state.search.selectedOrDefaultSearchEngine
+
         // Determine if we need a new tab based on current tab state
         val shouldCreateNewTab = shouldCreateNewTabForSearch()
 
@@ -116,6 +118,7 @@ class SearchDialogController(
         clearToolbarFocus()
 
         val searchEngine = fragmentStore.state.searchEngineSource.searchEngine
+            ?: store.state.search.selectedOrDefaultSearchEngine
         val shouldCreateNewTab = shouldCreateNewTabForSearch()
 
         activity.openToBrowserAndLoad(

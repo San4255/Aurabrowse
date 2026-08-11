@@ -279,7 +279,7 @@ class DefaultBrowserToolbarMenuController(
                     profiles[which].id
                 }
 
-                val migrated = profileManager.migrateTabToProfile(tabId, targetProfileId)
+                val migrated = profileManager.migrateTabToProfile(tabId, targetProfileId) != null
 
                 // After moving, switch the active profile so the moved tab is visible
                 if (migrated) {

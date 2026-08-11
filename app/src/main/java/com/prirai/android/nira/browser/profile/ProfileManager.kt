@@ -168,57 +168,51 @@ class ProfileManager(private val context: Context) {
     }
 
     /**
-     * Migrate a tab to another profile by updating its contextId
+     * Migrate a tab to another profile by updating its contextId.
+     * The tab is recreated with the target profile's contextId (GeckoView sessions
+     * cannot change contextId in place), so the returned value is the NEW tab id.
      * @param tabId The ID of the tab to migrate
      * @param targetProfileId The ID of the target profile ("private" for private mode)
-     * @return true if migration was successful
+     * @return the id of the recreated tab, or null if migration failed / already in target profile
      */
-    fun migrateTabToProfile(tabId: String, targetProfileId: String): Boolean {
+    fun migrateTabToProfile(tabId: String, targetProfileId: String): String? {
         val store = context.components.store
-        val tab = store.state.tabs.find { it.id == tabId } ?: return false
-        
+        val tab = store.state.tabs.find { it.id == tabId } ?: return null
+
         // Don't migrate if already in the target profile
         val currentContextId = tab.contextId
         val targetContextId = if (targetProfileId == "private") "private" else "profile_$targetProfileId"
-        if (currentContextId == targetContextId) return false
-        
-        // Check if migrating between private and normal
-        tab.content.private
+        if (currentContextId == targetContextId) return null
+
         val isTargetPrivate = targetProfileId == "private"
-        
+
         // Always recreate the tab with the new context and privacy mode
         val url = tab.content.url
         val title = tab.content.title
         val isSelected = store.state.selectedTabId == tabId
-        
+
         // Remove old tab
         context.components.tabsUseCases.removeTab(tabId)
-        
-        // Create new tab with correct context
-        context.components.tabsUseCases.addTab(
+
+        // Create new tab with correct context (returns the new tab id)
+        return context.components.tabsUseCases.addTab(
             url = url,
             private = isTargetPrivate,
             contextId = targetContextId,
             selectTab = isSelected,
             title = title
         )
-        
-        return true
     }
-    
+
     /**
      * Migrate multiple tabs to another profile
      * @param tabIds List of tab IDs to migrate
      * @param targetProfileId The ID of the target profile ("private" for private mode)
-     * @return Number of tabs successfully migrated
+     * @return the new ids of the successfully migrated tabs (empty if none)
      */
-    fun migrateTabsToProfile(tabIds: List<String>, targetProfileId: String): Int {
-        var successCount = 0
-        tabIds.forEach { tabId ->
-            if (migrateTabToProfile(tabId, targetProfileId)) {
-                successCount++
-            }
+    fun migrateTabsToProfile(tabIds: List<String>, targetProfileId: String): List<String> {
+        return tabIds.mapNotNull { tabId ->
+            migrateTabToProfile(tabId, targetProfileId)
         }
-        return successCount
     }
 }

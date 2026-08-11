@@ -508,7 +508,7 @@ class TabsBottomSheetFragment : DialogFragment() {
                 }
 
                 // Migrate tabs
-                val migratedCount = profileManager.migrateTabsToProfile(tabIds, targetProfileId)
+                val migratedCount = profileManager.migrateTabsToProfile(tabIds, targetProfileId).size
 
                 // Show confirmation
                 android.widget.Toast.makeText(

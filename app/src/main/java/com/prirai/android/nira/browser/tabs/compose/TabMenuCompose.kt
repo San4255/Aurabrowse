@@ -145,6 +145,8 @@ fun TabContextMenu(
     scope: CoroutineScope,
     modifier: Modifier = Modifier
 ) {
+    var showProfilePicker by remember { mutableStateOf(false) }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         modifier = modifier
@@ -227,6 +229,14 @@ fun TabContextMenu(
                 }
             )
 
+            TabMenuItem(
+                icon = { Icon(painterResource(R.drawable.ic_profile), "Move to Profile") },
+                text = "Move to Profile",
+                onClick = {
+                    showProfilePicker = true
+                }
+            )
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
             TabMenuItem(
@@ -247,6 +257,21 @@ fun TabContextMenu(
                 }
             )
         }
+    }
+
+    if (showProfilePicker) {
+        ProfilePickerDialog(
+            onConfirm = { profileId ->
+                scope.launch {
+                    viewModel.moveTabToProfile(tab.id, profileId)
+                    showProfilePicker = false
+                    onDismiss()
+                }
+            },
+            onDismiss = {
+                showProfilePicker = false
+            }
+        )
     }
 }
 
