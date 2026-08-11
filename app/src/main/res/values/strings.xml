@@ -479,6 +479,11 @@
   <string name="switch_to_tab">Switch to tab</string>
   <string name="move_to_profile">Move to Profile</string>
 
+  <!-- Addons / fullscreen strings required by default locale (present in values-* translations) -->
+  <string name="mozac_feature_addons_failed_to_uninstall">Failed to uninstall %s</string>
+  <string name="exit_fullscreen">Exit full screen</string>
+  <string name="toggle_fullscreen">Toggle fullscreen</string>
+
   <!-- Contextual Bottom Toolbar strings -->
   <string name="back">Back</string>
   <string name="share">Share</string>

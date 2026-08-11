@@ -2,11 +2,6 @@ name: Android CI
 
 on:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Existing tag to build and attach APKs to (e.g. v1.2.3)"
-        required: false
-        type: string
 
 jobs:
   build:
@@ -91,27 +86,9 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    # Only run on manual dispatch
-    if: github.event_name == 'workflow_dispatch'
 
     steps:
-      - name: Resolve tag
-        id: tag
-        run: |
-          if [ -n "${{ github.event.inputs.tag }}" ]; then
-            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Checkout code at tag
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.tag.outputs.tag }}
-          submodules: true
+      - uses: actions/checkout@v4
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2
 
@@ -122,34 +99,27 @@ jobs:
           distribution: zulu
 
       - uses: gradle/actions/setup-gradle@v5
+
+      - name: Create debug keystore (if missing)
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass android -keypass android \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Build Release APKs (signed with debug key)
+        run: |
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file="$HOME/.android/debug.keystore" \
+            -Pandroid.injected.signing.store.password=android \
+            -Pandroid.injected.signing.key.alias=androiddebugkey \
+            -Pandroid.injected.signing.key.password=android
+
+      - name: Upload Release APKs
+        uses: actions/upload-artifact@v4
         with:
-          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
-
-      - name: Decode keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$GITHUB_WORKSPACE/key.jks"
-
-      - name: Build Release APKs (signed)
-        run: |
-          ./gradlew clean assembleRelease \
-            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/key.jks" \
-            -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}" \
-            -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
-            -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
-
-      - name: Create or reuse GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release view "${{ steps.tag.outputs.tag }}" \
-          || gh release create "${{ steps.tag.outputs.tag }}" \
-               --title "Release ${{ steps.tag.outputs.tag }}" \
-               --notes "Automated release build"
-
-      - name: Upload Release APKs (standalone)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload "${{ steps.tag.outputs.tag }}" \
-            app/build/outputs/apk/release/*.apk \
-            --clobber
+          name: release-apks
+          path: app/build/outputs/apk/release/*.apk
