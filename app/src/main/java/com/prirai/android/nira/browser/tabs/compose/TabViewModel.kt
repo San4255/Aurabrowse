@@ -169,19 +169,25 @@ class TabViewModel(
             // Rebuild order to sync with latest database state (updates colors, names, etc.)
             orderManager.rebuildOrderForProfile(profileId, tabs)
 
-            // Initialize expanded groups from the saved order
+            // Initialize expanded groups from saved order, preserving current state as
+            // fallback and defaulting new groups to expanded. Must match the formula in
+            // refreshGroupsForProfile() or the two reload paths fight and the group UI
+            // flickers between collapsed/expanded.
             val savedOrder = orderManager.currentOrder.value
-            val expandedGroupIds = if (savedOrder != null) {
-                // Extract isExpanded state from saved order
-                savedOrder.primaryOrder
-                    .filterIsInstance<UnifiedTabOrder.OrderItem.TabGroup>()
-                    .filter { it.isExpanded }
-                    .map { it.groupId }
-                    .toSet()
-            } else {
-                // No saved order, expand all groups by default
-                groupsList.map { it.id }.toSet()
-            }
+            val savedExpandedStates = savedOrder?.primaryOrder
+                ?.filterIsInstance<UnifiedTabOrder.OrderItem.TabGroup>()
+                ?.associate { it.groupId to it.isExpanded }
+                ?: emptyMap()
+
+            val currentExpanded = _expandedGroups.value
+            val expandedGroupIds = groupsList.mapNotNull { group ->
+                when {
+                    savedExpandedStates.containsKey(group.id) ->
+                        if (savedExpandedStates[group.id] == true) group.id else null
+                    currentExpanded.contains(group.id) -> group.id
+                    else -> group.id // New groups default to expanded
+                }
+            }.toSet()
 
             // Update all state atomically to prevent flickering
             _tabs.value = orderedTabs

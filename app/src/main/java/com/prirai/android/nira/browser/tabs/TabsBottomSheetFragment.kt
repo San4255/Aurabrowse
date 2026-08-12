@@ -846,15 +846,9 @@ class TabsBottomSheetFragment : DialogFragment() {
                 }
             }
 
-            // Listen to group events and trigger refresh
-            launch {
-                unifiedGroupManager.groupEvents.collect { event ->
-                    // When groups change, force a refresh with current store state
-                    val state = store.state
-                    val filteredTabs = filterTabs(state.tabs)
-                    viewModel.loadTabsForProfile(profileId, filteredTabs, state.selectedTabId)
-                }
-            }
+            // Group events are handled by TabViewModel's own debounced collector
+            // (150ms). Reloading here too would double-reload the list on every
+            // group op and flicker the group menu.
         }
 
         // Use Scaffold for proper snackbar positioning
