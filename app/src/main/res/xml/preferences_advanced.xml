@@ -16,7 +16,7 @@
             app:title="@string/devtools_enabled"
             app:summary="@string/devtools_enabled_summary"
             app:singleLineTitle="false"
-            app:defaultValue="true" />
+            app:defaultValue="false" />
 
     </PreferenceCategory>
 

@@ -67,8 +67,8 @@ class UserPreferences(appContext: Context) : mozilla.components.support.ktx.andr
     var remoteDebugging by booleanPreference(REMOTE_DEBUGGING, false)
 
     // Controlled by Settings -> Advanced -> Developer tools.
-    // When off, the DevTools bridge extension is not installed (requires app restart).
-    var devtoolsEnabled by booleanPreference(DEVTOOLS_ENABLED, true)
+    // Off by default; when off, the DevTools bridge extension is not installed (requires app restart).
+    var devtoolsEnabled by booleanPreference(DEVTOOLS_ENABLED, false)
     var promptExternalDownloader by booleanPreference(PROMPT_EXTERNAL_DOWNLOADER, false)
     var addonSort by intPreference(ADDON_SORT, AddonSortType.RATING.ordinal)
     var showUrlProtocol by booleanPreference(SHOW_URL_PROTOCOL, false)
